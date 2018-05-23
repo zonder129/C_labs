@@ -7,26 +7,34 @@ import org.omg.PortableServer.POA;
 
 import java.util.Properties;
 import java.util.*;
+import java.io.*;
 
 // Класс, реализующий IDL-интерфейс базовой станции
 class StationServant extends StationPOA {
   // Вместо представленных ниже двух переменных здесь
   // должен быть список пар "номер - объектная ссылка"
-    Map<String, TubeCallback> tubeNumToRefsMap = new HashMap<String, TubeCallback>();  
+    Map<String, TubeCallback> tubeNumToRefsMap = new HashMap<>();  
   TubeCallback tubeRef;
   String tubeNum;
+  Cell.ServerDB dbRef;
+  String stationName;
 
   // Метод регистрации трубки в базовой станции
   public int register (TubeCallback objRef, String phoneNum) {
       tubeNumToRefsMap.put(phoneNum, objRef);
-     
+      dbRef.registerPhoneNumber(stationName, phoneNum);
       //tubeNum = phoneNum;
      System.out.println("Станция: зарегистрирована трубка "+phoneNum);
      return (1);
-     };
+  }
 
+  public int sendSMSToDB(String fromNum, String toNum, String message) {
+	System.out.println("Station: tube "+ fromNum + " send message to DB to number " + toNum);
+	dbRef.sendSMS(fromNum, toNum, message);
+	return 1;
+    }
   // Метод пересылки сообщения от трубки к трубке
-  public int sendSMS (String fromNum, String toNum, String message) {
+  public int sendSMSToTube (String fromNum, String toNum, String message) {
     System.out.println("Станция: трубка "+fromNum+" посылает сообщение "+toNum);
     // Здесь должен быть поиск объектной ссылки по номеру toNum
     if(tubeNumToRefsMap.get(toNum) == null){
@@ -36,7 +44,17 @@ class StationServant extends StationPOA {
 	tubeNumToRefsMap.get(toNum).sendSMS(fromNum, message);
     }
     return (1);
-    };
+  }
+    
+  public int setServerDBRef(Cell.ServerDB serverDBRef){
+	dbRef = serverDBRef;
+	return 1;
+  }
+
+  public int setStationName(String stationName){
+	this.stationName = stationName;
+	return 1;
+  }
   };
 
 // Класс, реализующий сервер базовой станции
@@ -44,6 +62,9 @@ public class StationServer {
 
   public static void main(String args[]) {
     try{
+	BufferedReader inpt  = new BufferedReader(new InputStreamReader(System.in));
+	System.out.println("Vvedite imya etoi stancii");
+	String stationName = inpt.readLine();
       // Создание и инициализация ORB
       ORB orb = ORB.init(args, null);
 
@@ -62,9 +83,16 @@ public class StationServer {
       NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
 
       // Связывание объектной ссылки с именем
-      String name = "BaseStation";
-      NameComponent path[] = ncRef.to_name( name );
+      NameComponent path[] = ncRef.to_name( stationName );
       ncRef.rebind(path, sref);
+
+      NameComponent dbPath[] = ncRef.to_name("ServerDB");
+      Cell.ServerDB dbRef = ServerDBHelper.narrow(ncRef.resolve(dbPath));
+
+      dbRef.registerStation(sref, stationName);
+
+      servant.setServerDBRef(dbRef);
+      servant.setStationName(stationName);
 
       System.out.println("Сервер готов и ждет ...");
 

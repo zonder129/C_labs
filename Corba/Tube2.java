@@ -48,6 +48,8 @@ public class Tube2 {
     try {
     
       BufferedReader inpt  = new BufferedReader(new InputStreamReader(System.in));
+      System.out.println("Vvedite nomer stancii");
+      String stationName = inpt.readLine();
       System.out.println("Vvedite svoi nomer");
       String myNum;
       myNum = inpt.readLine();
@@ -68,12 +70,12 @@ public class Tube2 {
       NamingContext ncRef = NamingContextHelper.narrow(objRef);
       
       // Преобразование имени базовой станции в объектную ссылку
-      NameComponent nc = new NameComponent("BaseStation", "");
+      NameComponent nc = new NameComponent(stationName, "");
       NameComponent path[] = {nc};
       Station stationRef = StationHelper.narrow(ncRef.resolve(path));
       
       // Регистрация трубки в базовой станции
-      stationRef .register(ref, myNum);
+      stationRef.register(ref, myNum);
       System.out.println("Трубка зарегистрирована базовой станцией");
 
       // Запуск ORB в отдельном потоке управления
@@ -94,7 +96,7 @@ public class Tube2 {
         msg.append('\n');
         } while(msg.charAt(msg.length()-2) != 5);
         msg.deleteCharAt(msg.length()-1);
-        stationRef .sendSMS(myNum, numTo, msg.toString());
+        stationRef.sendSMSToDB(myNum, numTo, msg.toString());
         msg = new StringBuilder();
         // Обратите внимание: номер получателя 7890 в описанной ранее
         // реализации базовой станции роли не играет

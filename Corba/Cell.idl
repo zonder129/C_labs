@@ -1,6 +1,7 @@
 /* Модуль для приложения "Сота" */
 module Cell {
   /* Интерфейс обратного вызова трубки */
+  interface ServerDB;
   interface TubeCallback {
     /* Принять сообщение message от номера fromNum */
     long sendSMS (in string fromNum, in string message);
@@ -14,11 +15,15 @@ module Cell {
     /* для обратного вызова трубки использовать ссылку TubeCallback */
     long register (in TubeCallback objRef, in string phoneNum);
     /* Отправить сообщение message от номера fromNum к номеру toNum */
-    long sendSMS (in string fromNum, in string toNum, in string message);
+    long sendSMSToDB (in string fromNum, in string toNum, in string message);
+    long sendSMSToTube(in string fromNum, in string toNum, in string message);
+    long setServerDBRef(in ServerDB objRef);
+    long setStationName(in string stationName);
     };
 
   interface ServerDB {
-    long register (in StationCallback objRef, in string stationName);
+    long registerStation (in Station objRef, in string stationName);
+    long registerPhoneNumber(in string stationName, in string phoneNumber);
     long sendSMS(in string fromNum, in string toNum, in string message);
   };
 

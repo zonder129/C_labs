@@ -176,7 +176,7 @@ public class Tube {
       NamingContext ncRef = NamingContextHelper.narrow(objRef);
       
       // Преобразование имени базовой станции в объектную ссылку
-      NameComponent nc = new NameComponent("BaseStation", "");
+      NameComponent nc = new NameComponent("Base, "");
       NameComponent path[] = {nc};
       Station stationRef = StationHelper.narrow(ncRef.resolve(path));
 
